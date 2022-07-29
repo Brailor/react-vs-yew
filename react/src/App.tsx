@@ -1,33 +1,37 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import "./index.css";
+import { Link, Route, Routes } from "react-router-dom";
 import "./App.css";
+import type { ReactNode } from "react";
+
+const pages: Record<string, ReactNode> = import.meta.glob("./pages/*.tsx", {
+  eager: true,
+});
+
+const routes: Array<{ name: string; element: ReactNode }> = [];
+for (let pageK in pages) {
+  let pageName = pageK.match(/\.\/(\w*)\/(\w*).*/)![2];
+
+  routes.push({
+    name: pageName,
+    element: ((pages[pageK] as any).default)(),
+  });
+}
 
 export function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <h1>Pages</h1>
+      <nav>
+        {routes.map(({ name }) => <Link key={name} to={`/${name}`}>{name}
+        </Link>)}
+      </nav>
+      <hr style={{ width: "100vh" }} />
+      <main>
+        <Routes>
+          {routes.map(({ name, element }) => (
+            <Route key={name} path={`/${name}`} element={element} />
+          ))}
+        </Routes>
+      </main>
     </div>
   );
 }
