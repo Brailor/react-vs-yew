@@ -13,12 +13,18 @@ type ServerConfig = {
   root: string;
   hmrPort: number;
   logging: boolean;
+  isProd: boolean;
 };
 
 export const createServer = async (
   args?: Partial<ServerConfig>,
 ) => {
-  const { root = process.cwd(), hmrPort = 3000, logging = false } = args || {};
+  const {
+    root = process.cwd(),
+    hmrPort = 3000,
+    logging = false,
+    isProd = process.env.NODE_ENV === "PRODUCTION",
+  } = args || {};
   const app = Fastify({
     logger: logging,
   });
@@ -42,22 +48,27 @@ export const createServer = async (
   // use vite's connect instance as middleware
   app.use(vite.middlewares);
 
-  const indexFile = fs.readFileSync(resolve("../index.html"), "utf8");
-  let template = indexFile;
+  let template = isProd
+    ? fs.readFileSync(resolve("../index.html"), "utf8")
+    : "";
 
+  const render = (await vite.ssrLoadModule(resolve("../src/server-entry.tsx")))
+    .render;
   app.get("*", async (request, reply) => {
     try {
       const url = request.url;
-      template = await vite.transformIndexHtml(url, template);
-      const render =
-        (await vite.ssrLoadModule(resolve("../src/server-render.tsx")))
-          .render;
-
+      if (!isProd) {
+        template = fs.readFileSync(resolve("../index.html"), "utf8");
+        template = await vite.transformIndexHtml(url, template);
+      } else {
+        template = await vite.transformIndexHtml(url, template);
+      }
       template = template.replace("<!-- app--root -->", render(url));
-
       reply.type("text/html").send(template);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);
+
+      reply.code(500).send((e as Error).message);
     }
   });
 
