@@ -1,19 +1,29 @@
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
-import "./index.css";
 
-const container = document.getElementById("root")!;
 const root = (
   <BrowserRouter>
     <App />
   </BrowserRouter>
 );
-// ReactDOM.createRoot(
-// container
-// ).render(
-// root
-// );
-//
+const container = document.getElementById("root")!;
 
-ReactDOM.hydrateRoot(container, root);
+const initApp = () => {
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  const clientOnlyRender = urlSearchParams.get("ssr") === "false";
+
+  if (!clientOnlyRender) {
+    console.log("Hydrating...");
+    ReactDOM.hydrateRoot(container, root);
+  } else {
+    console.log("NOT Hydrating...");
+    ReactDOM.createRoot(
+      container,
+    ).render(
+      root,
+    );
+  }
+};
+
+initApp();

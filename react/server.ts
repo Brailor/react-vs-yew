@@ -57,9 +57,22 @@ export const createServer = async (
   app.get("*", async (request, reply) => {
     try {
       const url = request.url;
+      console.log(url);
+
       if (!isProd) {
+        let shouldSSR = true;
+        const query = request.query as Record<string, any> | null;
+        if (query && "ssr" in query) {
+          shouldSSR = query.ssr === "true";
+        }
+
         template = fs.readFileSync(resolve("../index.html"), "utf8");
         template = await vite.transformIndexHtml(url, template);
+
+        if (!shouldSSR) {
+          reply.type("text/html").send(template);
+          return;
+        }
       } else {
         template = await vite.transformIndexHtml(url, template);
       }
@@ -76,7 +89,7 @@ export const createServer = async (
 };
 const port = 3000;
 
-createServer({ logging: true, hmrPort: 3001 }).then((app) => {
+createServer({ logging: false, hmrPort: 3001 }).then((app) => {
   app.listen({ port }, (err, address) => {
     if (err) {
       app.log.error(err);

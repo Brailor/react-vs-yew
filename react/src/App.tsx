@@ -1,5 +1,4 @@
 import { Link, Route, Routes } from "react-router-dom";
-import "./App.css";
 import type { ReactNode } from "react";
 
 const pages: Record<string, ReactNode> = import.meta.glob("./pages/*.tsx", {
@@ -21,8 +20,9 @@ export function App() {
     <div className="App">
       <h1>Pages</h1>
       <nav>
-        {routes.map(({ name }) => <Link key={name} to={`/${name}`}>{name}
-        </Link>)}
+        {routes.map(({ name }) => (
+          <Link style={{ margin: 5 }} key={name} to={`/${name}`}>{name}</Link>
+        ))}
       </nav>
       <hr style={{ width: "100vh" }} />
       <main>
